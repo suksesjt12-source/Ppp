@@ -1,0 +1,6 @@
+{
+  "name": "Storm Launcher",
+  "description": "Windows ARM64 compatibility launcher and runtime manager for Naruto Shippuden: Ultimate Ninja Storm Revolution featuring Wine, Box86/Box64/WoW64 orchestration, DXVK/WineD3D graphics translation for Mali GPUs, and customizable virtual gamepad controls.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,40 @@
+STORM LAUNCHER — THIRD-PARTY OPEN-SOURCE NOTICES
+==================================================
+
+Storm Launcher integrates with and relies upon the following open-source projects.
+All trademarks and copyrights belong to their respective authors. No proprietary
+game assets or binaries are included in this repository or APK.
+
+1. Wine (Wine Is Not an Emulator)
+   - Upstream: https://www.winehq.org/
+   - License: GNU Lesser General Public License v2.1 (LGPL-2.1)
+   - Role: Windows API compatibility layer, WoW64 subsystem, WineD3D Direct3D 9 translation.
+
+2. Box64
+   - Upstream: https://github.com/ptitSeb/box64
+   - License: MIT License
+   - Role: Linux Userspace x86_64-to-ARM64 translator with DynaRec JIT.
+
+3. Box86
+   - Upstream: https://github.com/ptitSeb/box86
+   - License: MIT License
+   - Role: Optional Linux Userspace x86-to-ARM32 translator for multiarch devices.
+
+4. DXVK
+   - Upstream: https://github.com/doitsujin/dxvk
+   - License: zlib/libpng License
+   - Role: Vulkan-based Direct3D 9 / 10 / 11 translation layer.
+
+5. Winlator (Reference Architecture)
+   - Upstream: https://github.com/winebox64/winlator
+   - License: MIT License
+   - Role: Architectural reference for Android non-root Wine + Box64 containerization.
+
+6. PulseAudio
+   - Upstream: https://www.freedesktop.org/wiki/Software/PulseAudio/
+   - License: GNU Lesser General Public License v2.1 (LGPL-2.1)
+   - Role: Userspace audio routing with configurable anti-underrun buffering.
+
+7. Android Jetpack, Compose, Material 3, Kotlinx Serialization, DataStore
+   - Upstream: https://developer.android.com/jetpack
+   - License: Apache License 2.0
