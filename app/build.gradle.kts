@@ -1,5 +1,4 @@
 import com.google.gms.googleservices.GoogleServicesPlugin.MissingGoogleServicesStrategy
-import java.io.File
 
 plugins {
   alias(libs.plugins.android.application)
@@ -10,25 +9,21 @@ plugins {
   alias(libs.plugins.google.services)
 }
 
-val sdkRootPath = providers.environmentVariable("ANDROID_SDK_ROOT")
-  .orElse(providers.environmentVariable("ANDROID_HOME"))
-  .orNull
-val enableNativeBridgeProp = providers.gradleProperty("enableNativeBridge")
-  .map { it.toBoolean() }
-  .getOrElse(false)
-val resolvedNdkVersion = providers.gradleProperty("ndkVersion").orNull
-  ?: sdkRootPath?.let { File(it, "ndk").listFiles()?.filter { d -> d.isDirectory }?.maxByOrNull { d -> d.name }?.name }
-val resolvedCmakeVersion = providers.gradleProperty("cmakeVersion").orNull
-  ?: sdkRootPath?.let { File(it, "cmake").listFiles()?.filter { d -> d.isDirectory }?.maxByOrNull { d -> d.name }?.name }
+val standardNdkVersion = "27.2.12479018"
+val standardCmakeVersion = "3.22.1"
+val standardSdkNdkDir = file("/usr/local/lib/android/sdk/ndk/$standardNdkVersion")
+val standardSdkCmakeDir = file("/usr/local/lib/android/sdk/cmake/$standardCmakeVersion")
 
 val hasNdkAndCmake =
-  enableNativeBridgeProp || (resolvedNdkVersion != null && resolvedCmakeVersion != null)
+  providers.gradleProperty("enableNativeBridge")
+    .map { it.toBoolean() }
+    .getOrElse(false) || (standardSdkNdkDir.exists() && standardSdkCmakeDir.exists())
 
 android {
   namespace = "com.example"
   compileSdk { version = release(36) { minorApiLevel = 1 } }
-  if (hasNdkAndCmake && resolvedNdkVersion != null) {
-    ndkVersion = resolvedNdkVersion
+  if (hasNdkAndCmake) {
+    ndkVersion = standardNdkVersion
   }
 
   defaultConfig {
@@ -60,9 +55,7 @@ android {
     externalNativeBuild {
       cmake {
         path = file("src/main/cpp/CMakeLists.txt")
-        if (resolvedCmakeVersion != null) {
-          version = resolvedCmakeVersion
-        }
+        version = standardCmakeVersion
       }
     }
   }
