@@ -38,46 +38,82 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Install Android 36.1 Platform, NDK, and CMake
+      - name: Install Android SDK Platforms, NDK, and CMake
         run: |
           set +o pipefail
           yes | sdkmanager --licenses >/dev/null 2>&1 || true
           set -o pipefail
 
-          NDK_PKG=$(sdkmanager --list | grep -oE 'ndk;27\.[0-9]+\.[0-9]+' | sort -V | tail -n 1 || true)
+          SDK_LIST=$(sdkmanager --list 2>/dev/null || true)
+
+          NDK_PKG=$(echo "$SDK_LIST" | grep -oE 'ndk;27\.[0-9]+\.[0-9]+' | sort -V | tail -n 1 || true)
           if [ -z "$NDK_PKG" ]; then
-            NDK_PKG=$(sdkmanager --list | grep -oE 'ndk;[0-9]+\.[0-9]+\.[0-9]+' | sort -V | tail -n 1)
+            NDK_PKG=$(echo "$SDK_LIST" | grep -oE 'ndk;[0-9]+\.[0-9]+\.[0-9]+' | sort -V | tail -n 1 || true)
           fi
 
-          CMAKE_PKG=$(sdkmanager --list | grep -oE 'cmake;[0-9]+\.[0-9]+\.[0-9]+' | sort -V | tail -n 1)
+          CMAKE_PKG=$(echo "$SDK_LIST" | grep -oE 'cmake;3\.22\.1' | head -n 1 || true)
+          if [ -z "$CMAKE_PKG" ]; then
+            CMAKE_PKG=$(echo "$SDK_LIST" | grep -oE 'cmake;[0-9]+\.[0-9]+\.[0-9]+' | sort -V | tail -n 1 || true)
+          fi
 
-          echo "Installing SDK packages: platforms;android-36 platforms;android-36.1 build-tools;36.0.0 $NDK_PKG $CMAKE_PKG"
-          sdkmanager "platforms;android-36" "platforms;android-36.1" "build-tools;36.0.0" "$NDK_PKG" "$CMAKE_PKG"
+          PKGS=("platforms;android-36" "build-tools;36.0.0")
+          if echo "$SDK_LIST" | grep -q 'platforms;android-36\.1'; then
+            PKGS+=("platforms;android-36.1")
+          fi
+          [ -n "$NDK_PKG" ] && PKGS+=("$NDK_PKG")
+          [ -n "$CMAKE_PKG" ] && PKGS+=("$CMAKE_PKG")
+
+          echo "Installing SDK packages: ${PKGS[*]}"
+          sdkmanager "${PKGS[@]}"
 
           SDK_ROOT="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
           echo "ANDROID_SDK_ROOT=$SDK_ROOT" >> "$GITHUB_ENV"
-          NDK_DIR=$(find "$SDK_ROOT/ndk" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n 1)
-          echo "ANDROID_NDK_HOME=$NDK_DIR" >> "$GITHUB_ENV"
+          echo "ANDROID_HOME=$SDK_ROOT" >> "$GITHUB_ENV"
 
-      - name: Build Box64 ARM64 Native Translator (Upstream Source)
-        run: |
-          chmod +x runtime/box64/build_box64_arm64.sh native/build-scripts/build_all_arm64.sh
-          ./runtime/box64/build_box64_arm64.sh build/runtime-staging/box64 || echo "Box64 cross-build step completed with warnings"
+          NDK_DIR=$(find "$SDK_ROOT/ndk" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | sort -V | tail -n 1 || true)
+          CMAKE_DIR=$(find "$SDK_ROOT/cmake" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | sort -V | tail -n 1 || true)
 
-      - name: Setup Gradle
+          NDK_VER=$([ -n "${NDK_DIR:-}" ] && basename "$NDK_DIR" || true)
+          CMAKE_VER=$([ -n "${CMAKE_DIR:-}" ] && basename "$CMAKE_DIR" || true)
+
+          echo "ANDROID_NDK_HOME=${NDK_DIR:-}" >> "$GITHUB_ENV"
+          echo "RESOLVED_NDK_VER=${NDK_VER:-}" >> "$GITHUB_ENV"
+          echo "RESOLVED_CMAKE_VER=${CMAKE_VER:-}" >> "$GITHUB_ENV"
+          echo "Resolved NDK=${NDK_VER:-none} | CMake=${CMAKE_VER:-none}"
+
+      - name: Setup Gradle 9.3.1
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '9.3.1'
 
+      - name: Verify Toolchain Versions
+        run: |
+          java -version
+          gradle --version
+          ls -la "${ANDROID_SDK_ROOT}/platforms"
+
       - name: Run Unit & Robolectric Tests
-        run: gradle :app:testDebugUnitTest --no-daemon --stacktrace
+        run: gradle :app:testDebugUnitTest --no-daemon --no-configuration-cache --stacktrace
 
       - name: Assemble Debug APK (with C++20 JNI Native Bridge)
-        run: gradle :app:assembleDebug -PenableNativeBridge=true --no-daemon --stacktrace
+        run: |
+          GRADLE_ARGS=(-PenableNativeBridge=true --no-daemon --no-configuration-cache --stacktrace)
+          if [ -n "${RESOLVED_NDK_VER:-}" ]; then
+            GRADLE_ARGS+=(-PndkVersion="${RESOLVED_NDK_VER}")
+          fi
+          if [ -n "${RESOLVED_CMAKE_VER:-}" ]; then
+            GRADLE_ARGS+=(-PcmakeVersion="${RESOLVED_CMAKE_VER}")
+          fi
+          gradle :app:assembleDebug "${GRADLE_ARGS[@]}"
 
       - name: Verify Debug APK Output
         run: |
           ls -lh app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Build Box64 ARM64 Native Translator (Optional Upstream Staging)
+        run: |
+          chmod +x runtime/box64/build_box64_arm64.sh native/build-scripts/build_all_arm64.sh
+          ./runtime/box64/build_box64_arm64.sh /tmp/runtime-staging/box64 || echo "Box64 cross-build step completed with warnings"
 
       - name: Upload Debug APK Artifact
         uses: actions/upload-artifact@v4

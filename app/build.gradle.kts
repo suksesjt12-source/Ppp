@@ -10,16 +10,26 @@ plugins {
   alias(libs.plugins.google.services)
 }
 
-val sdkRootPath = System.getenv("ANDROID_SDK_ROOT") ?: System.getenv("ANDROID_HOME")
+val sdkRootPath = providers.environmentVariable("ANDROID_SDK_ROOT")
+  .orElse(providers.environmentVariable("ANDROID_HOME"))
+  .orNull
+val enableNativeBridgeProp = providers.gradleProperty("enableNativeBridge")
+  .map { it.toBoolean() }
+  .getOrElse(false)
+val resolvedNdkVersion = providers.gradleProperty("ndkVersion").orNull
+  ?: sdkRootPath?.let { File(it, "ndk").listFiles()?.filter { d -> d.isDirectory }?.maxByOrNull { d -> d.name }?.name }
+val resolvedCmakeVersion = providers.gradleProperty("cmakeVersion").orNull
+  ?: sdkRootPath?.let { File(it, "cmake").listFiles()?.filter { d -> d.isDirectory }?.maxByOrNull { d -> d.name }?.name }
+
 val hasNdkAndCmake =
-  project.findProperty("enableNativeBridge")?.toString()?.toBoolean() == true ||
-    (sdkRootPath != null &&
-      File(sdkRootPath, "ndk").listFiles()?.isNotEmpty() == true &&
-      File(sdkRootPath, "cmake").listFiles()?.isNotEmpty() == true)
+  enableNativeBridgeProp || (resolvedNdkVersion != null && resolvedCmakeVersion != null)
 
 android {
   namespace = "com.example"
   compileSdk { version = release(36) { minorApiLevel = 1 } }
+  if (hasNdkAndCmake && resolvedNdkVersion != null) {
+    ndkVersion = resolvedNdkVersion
+  }
 
   defaultConfig {
     applicationId = "com.aistudio.stormrev.kxmpzq"
@@ -38,7 +48,7 @@ android {
       externalNativeBuild {
         cmake {
           cppFlags += listOf("-std=c++20", "-O2", "-fvisibility=hidden")
-          arguments += listOf("-DANDROID_STL=c++_shared", "-DANDROID_ARM_NEON=TRUE")
+          arguments += listOf("-DANDROID_STL=c++_static")
         }
       }
     }
@@ -50,6 +60,9 @@ android {
     externalNativeBuild {
       cmake {
         path = file("src/main/cpp/CMakeLists.txt")
+        if (resolvedCmakeVersion != null) {
+          version = resolvedCmakeVersion
+        }
       }
     }
   }
