@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Storm Launcher</string>
+    <string name="app_subtitle">Windows ARM64 Runtime &amp; Compatibility Engine</string>
+    <string name="game_title_full">NARUTO SHIPPUDEN: Ultimate Ninja STORM Revolution</string>
+    <string name="game_title_short">STORM REVOLUTION</string>
+    <string name="action_play">PLAY</string>
+    <string name="action_configuration">CONFIGURATION</string>
+    <string name="action_runtime_manager">RUNTIME MANAGER</string>
+    <string name="action_game_files">GAME FILES</string>
+    <string name="action_debug">DEBUG</string>
+    <string name="cd_launcher_emblem">Storm Launcher vortex emblem</string>
+    <string name="cd_hero_banner">Storm energy abstract backdrop</string>
+    <string name="cd_back">Navigate back</string>
+</resources>
