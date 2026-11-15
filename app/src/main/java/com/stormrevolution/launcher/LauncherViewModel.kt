@@ -87,6 +87,17 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
     fun initializeAll() {
         viewModelScope.launch(Dispatchers.IO) {
+            val (extracted, fileCount) = container.runtimeManager.extractBundledRuntimeIfNeeded { statusMsg ->
+                _uiState.update { it.copy(bannerFeedback = statusMsg) }
+            }
+            if (extracted && fileCount > 0) {
+                container.appendLog(
+                    LogLevel.INFO,
+                    LogSource.RUNTIME,
+                    "Extracted $fileCount built-in runtime files from APK assets."
+                )
+            }
+
             val savedConfig = container.settingsManager.loadConfiguration()
             val savedControls = container.settingsManager.loadControlLayout()
             val savedGame = container.settingsManager.loadGameLibraryState()

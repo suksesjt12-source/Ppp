@@ -113,4 +113,17 @@ class PeAndRuntimeVerificationTest {
         assertFalse(report.canLaunch)
         assertTrue(report.items.any { it.id == "arch_mismatch" && it.code == "ARCH-01" })
     }
+
+    @Test
+    fun `RuntimeManager auto-extracts bundled APK runtime assets`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val storage = StorageManager(context)
+        storage.runtimeRootDir.deleteRecursively()
+        val rt = RuntimeManager(context, storage)
+        val (extracted, count) = rt.extractBundledRuntimeIfNeeded()
+        assertTrue(extracted)
+        assertTrue(count >= 2)
+        val components = rt.scanAllComponents()
+        assertEquals(ComponentStatus.INSTALLED, components[RuntimeComponentId.GRAPHICS_DRIVER]?.status)
+    }
 }

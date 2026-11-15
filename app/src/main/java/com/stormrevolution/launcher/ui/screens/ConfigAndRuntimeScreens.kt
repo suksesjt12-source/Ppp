@@ -274,7 +274,7 @@ fun RuntimeManagerScreen(
         item {
             ScreenHeader(
                 title = "Windows ARM64 Runtime Manager",
-                subtitle = "Verifies real ELF64/PE binaries & SHA-256 checksums inside app runtime storage",
+                subtitle = "Auto-unpacks built-in APK runtime & verifies real ELF64/PE binaries on disk",
                 onBack = onBack,
                 trailing = {
                     OutlinedButton(
@@ -293,9 +293,9 @@ fun RuntimeManagerScreen(
 
         item {
             StormSectionCard(borderColor = RasenganCyan.copy(alpha = 0.55f)) {
-                Text("Import Runtime Bundle (.zip)", style = MaterialTheme.typography.titleMedium, color = RasenganCyan)
+                Text("Built-In APK Runtime & Optional Override", style = MaterialTheme.typography.titleMedium, color = RasenganCyan)
                 Text(
-                    text = "Build ARM64 Wine WoW64, Box64, Box86, and DXVK packages using runtime/ scripts or import a signed archive from device storage. Components are never marked Installed unless verified on disk.",
+                    text = "Runtime ARM64 (Box64, Wine WoW64, DXVK, RootFS, Mali Profile) diekstrak otomatis saat aplikasi dibuka dari build GitHub Actions. Impor ZIP manual di bawah bersifat opsional untuk update kustom.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -311,7 +311,7 @@ fun RuntimeManagerScreen(
                 ) {
                     Icon(Icons.Default.FileUpload, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Import Runtime ZIP Bundle")
+                    Text("Import Custom Runtime ZIP (Opsional)")
                 }
             }
         }

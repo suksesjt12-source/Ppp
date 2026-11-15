@@ -13,20 +13,33 @@ add_library(
     input_bridge.cpp
 )
 
+add_library(
+    storm_vulkan_wrapper
+    SHARED
+    vulkan_wrapper.cpp
+)
+
+add_library(
+    storm_audio_bridge
+    SHARED
+    audio_bridge.cpp
+)
+
 find_library(log-lib log)
 find_library(android-lib android)
+find_library(opensles-lib OpenSLES)
 
-target_compile_options(
-    storm_runtime_bridge
-    PRIVATE
-    -Wall
-    -Wextra
-    -Werror=return-type
-    -fvisibility=hidden
-)
+foreach(tgt storm_runtime_bridge storm_vulkan_wrapper storm_audio_bridge)
+    target_compile_options(
+        ${tgt}
+        PRIVATE
+        -Wall
+        -Wextra
+        -Werror=return-type
+        -fvisibility=hidden
+    )
+endforeach()
 
-target_link_libraries(
-    storm_runtime_bridge
-    ${log-lib}
-    ${android-lib}
-)
+target_link_libraries(storm_runtime_bridge ${log-lib} ${android-lib})
+target_link_libraries(storm_vulkan_wrapper dl ${log-lib})
+target_link_libraries(storm_audio_bridge ${opensles-lib} ${log-lib})

@@ -261,7 +261,11 @@ fun DashboardScreen(
                             }
                             if (!canPlay) {
                                 Text(
-                                    text = "Requires verified NSUNSR.exe & ARM64 runtime",
+                                    text = if (!uiState.gameLibrary.peResult.isValidPe) {
+                                        "Import folder game PC (NSUNSR.exe) di Game Files untuk mulai bermain"
+                                    } else {
+                                        "Verifikasi komponen runtime di Runtime Manager"
+                                    },
                                     style = MaterialTheme.typography.labelSmall,
                                     color = StatusWarning,
                                     maxLines = 2

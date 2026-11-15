@@ -39,6 +39,7 @@ class StormAppContainer(application: Application) {
 
     val processManager = ProcessManager(
         storageManager = storageManager,
+        runtimeManager = runtimeManager,
         wineManager = wineManager,
         graphicsManager = graphicsManager,
         audioManager = audioManager,

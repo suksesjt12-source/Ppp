@@ -1,0 +1,2 @@
+bundle_version=1.0.0-storm-arm64
+profile=helio-g100-mali-g57

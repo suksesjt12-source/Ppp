@@ -25,6 +25,7 @@ import java.io.File
 
 class ProcessManager(
     private val storageManager: StorageManager,
+    private val runtimeManager: RuntimeManager,
     private val wineManager: WineManager,
     private val graphicsManager: GraphicsManager,
     private val audioManager: AudioManager,
@@ -54,11 +55,13 @@ class ProcessManager(
         }
 
         val wineBin = File(storageManager.runtimeRootDir, "wine/bin/wine")
-        val box64Bin = File(storageManager.runtimeRootDir, "box64/bin/box64")
+        val box64Native = runtimeManager.resolveNativeLibFallbackFile(RuntimeComponentId.BOX64)
+        val box64Extracted = File(storageManager.runtimeRootDir, "box64/bin/box64")
+        val box64Bin = box64Native ?: box64Extracted
         val box86Bin = File(storageManager.runtimeRootDir, "box86/bin/box86")
 
         if (runtimeComponents[RuntimeComponentId.WINE]?.status != ComponentStatus.INSTALLED || !wineBin.exists()) {
-            val msg = "Wine ARM64 runtime binary is missing or unverified."
+            val msg = "Wine ARM64/WoW64 runtime binary is missing or unverified."
             onEmitLog(LogLevel.ERROR, LogSource.WINE, msg)
             _sessionState.value = LaunchSessionState(state = ProcessState.FAILED, statusDetail = msg)
             return false
